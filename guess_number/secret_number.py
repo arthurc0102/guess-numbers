@@ -1,7 +1,8 @@
 import logging
 import random
+import string
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 NUMBER_LENGTH = 4
 
@@ -12,28 +13,36 @@ logger = logging.getLogger(__name__)
 class SecretNumber:
     def __init__(self, length: int = NUMBER_LENGTH) -> None:
         self.length = length
-        self._target_number: List[int] = self.generate()
+        self._answer = self.generate()
 
         logger.debug(f"target_number -> {self.answer}")
 
-        self.guess_list: List[Dict[str, List[int]]] = []
+        self.guess_list: List[Dict[str, Any]] = []
 
-    @property
-    def target_number(self) -> List[int]:
-        return self._target_number
+    def _compare_answer(self, guess_number: str, answer_number: str) -> Tuple[int, int]:
+        a = b = 0
+
+        for i, j in zip(guess_number, answer_number):
+            if i == j:
+                a += 1
+            elif i in answer_number:
+                b += 1
+
+        return a, b
 
     @property
     def answer(self) -> str:
-        return "".join(map(str, self.target_number))
+        return self._answer
 
-    def generate(self) -> List[int]:
-        return random.sample(range(10), self.length)
+    def generate(self) -> str:
+        return "".join(random.sample(string.digits, self.length))
 
-    def validate(self, number: str) -> List[int]:
+    def validate(self, number: str) -> str:
         assert number.isdigit(), "This is not a number."
         assert len(number) == self.length, f"Input should be {self.length}."
         assert len(set(number)) == self.length, "Number can't be repeated."
-        return list(map(int, number))
+
+        return number
 
     def get_last_result(self) -> str:
         assert len(self.guess_list) >= 1, "No item in guess list."
@@ -46,12 +55,7 @@ class SecretNumber:
         logger.debug(f"user_input -> {user_input}")
         guess_number = self.validate(user_input)
 
-        a = b = 0
-        for i, j in zip(guess_number, self.target_number):
-            if i == j:
-                a += 1
-            elif i in self.target_number:
-                b += 1
-
+        a, b = self._compare_answer(guess_number, self._answer)
         self.guess_list.append({"number": guess_number, "result": [a, b]})
+
         return self.get_last_result(), a == 4 and b == 0
