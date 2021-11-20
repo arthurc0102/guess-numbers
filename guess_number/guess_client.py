@@ -1,3 +1,4 @@
+import re
 import string
 
 from itertools import permutations
@@ -78,6 +79,20 @@ class GuessClient:
 
         return max(guess_exclude_mapping.items(), key=lambda x: x[1])[0]
 
+    def validate(self, result: str) -> Tuple[int, int]:
+        pattern = re.compile(r"(?P<A>\d+)A(?P<B>\d+)B", re.I)
+
+        matched = pattern.match(result)
+        assert matched is not None, "Result not valid."
+
+        a_str, b_str = matched.groups()
+        assert a_str.isdigit() and b_str.isdigit(), "Result not valid, not number."
+
+        a, b = int(a_str), int(b_str)
+        assert a + b <= self.length, "Result not valid, a + b bigger than length"
+
+        return a, b
+
     def guess(self) -> str:
         assert not self.is_end, "Game has ended."
 
@@ -91,7 +106,7 @@ class GuessClient:
     def guess_result(self, result: str) -> None:
         assert self.guess_number is not None, "Not guess yet."
 
-        a, b = map(int, result[:3:2])
+        a, b = self.validate(result)
         self.guess_history[self.guess_number] = (a, b)
 
         self.is_end = a == self.length

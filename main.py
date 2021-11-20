@@ -40,7 +40,12 @@ def computer_guess() -> None:
     while True:
         guess_number = guess_client.guess()
         input_ = input(f"{guess_number}: ")
-        guess_client.guess_result(input_)
+
+        try:
+            guess_client.guess_result(input_)
+        except Exception as e:
+            print(e)
+            continue
 
         if guess_client.is_end:
             break
